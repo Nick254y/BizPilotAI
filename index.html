@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101828">
+  <title>BizPilot AI Business workspace</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" aria-label="BizPilot AI home">
+        <span class="brand-mark">B</span>
+        <span>BizPilot <small>AI</small></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-link active" data-page="overview"><span>📊</span> Overview</button>
+        <button class="nav-link" data-page="projects"><span>📁</span> Projects</button>
+        <button class="nav-link" data-page="assistant"><span>✨</span> AI assistant</button>
+        <button class="nav-link" data-page="marketing"><span>📣</span> Marketing</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-link" data-page="settings"><span>⚙️</span> Settings</button>
+        <div class="profile">
+          <div class="avatar">U</div>
+          <div><strong>Your workspace</strong><small>Starter account</small></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" aria-label="Open navigation">☰</button>
+        <div class="breadcrumb">Workspace <span>/</span> <strong id="pageName">Overview</strong></div>
+        <div class="topbar-right"><span class="status-dot"></span><span>Demo mode</span></div>
+      </header>
+
+      <section class="page active-page" id="overviewPage">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow">YOUR BUSINESS WORKSPACE</p>
+            <h1>Good day. Let's make progress.</h1>
+            <p class="muted">Plan your work, explore ideas and keep everything moving.</p>
+          </div>
+          <button class="primary-button" id="newProjectButton">+ New project</button>
+        </div>
+
+        <div class="stat-grid">
+          <article class="stat-card">
+            <div class="stat-heading"><span>Active projects</span><span class="stat-icon blue">📁</span></div>
+            <strong id="projectCount">2</strong>
+            <small>Projects in your workspace</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-heading"><span>Tasks completed</span><span class="stat-icon green">✓</span></div>
+            <strong id="taskCount">3</strong>
+            <small>Demo tasks completed</small>
+          </article>
+          <article class="stat-card">
+            <div class="stat-heading"><span>AI ideas</span><span class="stat-icon purple">✦</span></div>
+            <strong>8</strong>
+            <small>Ideas to explore</small>
+          </article>
+        </div>
+
+        <div class="content-grid">
+          <section class="panel">
+            <div class="panel-heading">
+              <div><h2>Your projects</h2><p class="muted">A quick look at what you're building.</p></div>
+              <button class="text-button" data-go="projects">View all</button>
+            </div>
+            <div id="projectList" class="project-list"></div>
+          </section>
+
+          <section class="panel assistant-promo">
+            <div class="sparkle">✦</div>
+            <p class="eyebrow">BIZPILOT AI</p>
+            <h2>Have a business question?</h2>
+            <p class="muted">Use your assistant to brainstorm, plan and draft business content.</p>
+            <button class="primary-button" data-go="assistant">Open AI assistant →</button>
+            <small class="notice">The assistant is a front-end demo until we connect an AI service.</small>
+          </section>
+        </div>
+      </section>
+
+      <section class="page" id="projectsPage">
+        <div class="page-heading">
+          <div><p class="eyebrow">ORGANISE YOUR WORK</p><h1>Projects</h1><p class="muted">Keep your business ideas and work in one place.</p></div>
+          <button class="primary-button" id="projectsNewButton">+ New project</button>
+        </div>
+        <section class="panel"><div id="allProjects" class="project-list"></div></section>
+      </section>
+
+      <section class="page" id="assistantPage">
+        <div class="page-heading"><div><p class="eyebrow">THINK WITH BIZPILOT</p><h1>AI assistant</h1><p class="muted">Draft ideas and get help planning your next move.</p></div></div>
+        <section class="chat-panel">
+          <div class="chat-intro"><div class="assistant-avatar">✦</div><h2>What are we working on?</h2><p class="muted">Try asking for a business idea, a launch checklist or a marketing draft.</p></div>
+          <div class="suggestions">
+            <button class="suggestion">Give me a small business idea</button>
+            <button class="suggestion">Create a launch checklist</button>
+            <button class="suggestion">Write a product description</button>
+          </div>
+          <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
+          <form class="chat-form" id="chatForm">
+            <input id="chatInput" type="text" placeholder="Ask BizPilot something..." autocomplete="off" required>
+            <button class="primary-button" type="submit">Send</button>
+          </form>
+          <p class="notice chat-notice">Demo replies are generated in your browser. Real AI responses will be added in a later stage.</p>
+        </section>
+      </section>
+
+      <section class="page" id="marketingPage">
+        <div class="page-heading"><div><p class="eyebrow">GROW YOUR AUDIENCE</p><h1>Marketing studio</h1><p class="muted">Prepare simple marketing drafts for your business.</p></div></div>
+        <section class="panel marketing-panel">
+          <label for="businessName">Business or product name</label>
+          <input id="businessName" type="text" placeholder="e.g. Fresh Basket">
+          <label for="marketingType">What do you want to create?</label>
+          <select id="marketingType">
+            <option>Social media caption</option>
+            <option>Product description</option>
+            <option>Short advertisement</option>
+          </select>
+          <button class="primary-button" id="generateMarketing">Create draft</button>
+          <div class="output-box" id="marketingOutput">Your draft will appear here.</div>
+          <p class="notice">This is a sample template generator, not an AI connection yet.</p>
+        </section>
+      </section>
+
+      <section class="page" id="settingsPage">
+        <div class="page-heading"><div><p class="eyebrow">PERSONALISE YOUR SPACE</p><h1>Settings</h1><p class="muted">Basic workspace preferences.</p></div></div>
+        <section class="panel settings-panel">
+          <h2>Workspace details</h2>
+          <label for="workspaceName">Workspace name</label>
+          <input id="workspaceName" value="Your workspace">
+          <button class="primary-button" id="saveSettings">Save settings</button>
+          <p class="notice" id="settingsMessage">Settings are stored only in this browser demo.</p>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="projectDialog">
+    <form method="dialog" id="projectForm">
+      <div class="dialog-heading">
+        <div><p class="eyebrow">NEW WORK</p><h2>Create a project</h2></div>
+        <button type="button" class="close-button" id="closeDialogButton" aria-label="Close">×</button>
+      </div>
+      <label for="projectName">Project name</label>
+      <input id="projectName" maxlength="60" placeholder="e.g. Online shop website" required>
+      <label for="projectDescription">Short description</label>
+      <textarea id="projectDescription" rows="3" maxlength="180" placeholder="What do you want to achieve?"></textarea>
+      <div class="dialog-actions">
+        <button type="button" class="secondary-button" id="cancelDialogButton">Cancel</button>
+        <button class="primary-button" id="createProjectButton" value="default">Create project</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
