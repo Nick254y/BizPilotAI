@@ -17,6 +17,7 @@ if (!JWT_SECRET) {
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
+app.use((req, res, next) => { res.on("finish", () => console.log("[req]", req.method, req.path, res.statusCode)); next(); });
 app.get("/briefing", (req, res) => res.sendFile(require("path").join(__dirname, "public", "briefing.html")));
 
 app.get("/api/health", (req, res) => {
