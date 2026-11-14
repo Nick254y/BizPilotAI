@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BizPilot Briefing</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --text:#1a1d21; --muted:#6b7280; --accent:#2563eb; --border:#e5e7eb; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1115; --card:#181b21; --text:#e8eaed; --muted:#9aa0a6; --accent:#60a5fa; --border:#2a2f38; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); padding:16px; }
+  .wrap { max-width:640px; margin:0 auto; }
+  h1 { font-size:1.3rem; margin:8px 0 16px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; }
+  input { width:100%; padding:12px; margin:6px 0 12px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:1rem; }
+  button { padding:12px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-size:1rem; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--accent); border:1px solid var(--border); }
+  button:disabled { opacity:.6; }
+  .row { display:flex; gap:8px; margin-bottom:12px; }
+  .date { color:var(--muted); font-size:.85rem; margin-bottom:8px; }
+  .report { white-space:pre-wrap; line-height:1.5; }
+  .msg { color:var(--muted); font-size:.9rem; margin:8px 0; }
+  .err { color:#dc2626; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>BizPilot Daily Briefing</h1>
+
+  <div id="loginBox" class="card">
+    <label>Email<input id="email" type="email" autocomplete="username"></label>
+    <label>Password<input id="password" type="password" autocomplete="current-password"></label>
+    <button id="loginBtn">Log in</button>
+    <div id="loginMsg" class="msg err"></div>
+  </div>
+
+  <div id="appBox" class="hidden">
+    <div class="row">
+      <button id="runBtn">Generate now</button>
+      <button id="logoutBtn" class="ghost">Log out</button>
+    </div>
+    <div id="status" class="msg"></div>
+    <div id="reports"></div>
+  </div>
+</div>
+
+<script>
+const KEY = "bizpilot_token";
+const $ = (id) => document.getElementById(id);
+
+function getToken() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+function setToken(t) { try { t ? localStorage.setItem(KEY, t) : localStorage.removeItem(KEY); } catch (e) {} }
+
+async function api(path, options) {
+  const token = getToken();
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = "Bearer " + token;
+  const res = await fetch(path, Object.assign({}, options, { headers }));
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && path !== "/api/auth/login") { logout(); }
+  if (!res.ok) throw new Error(data.message || "Request failed");
+  return data;
+}
+
+function showApp(on) {
+  $("loginBox").classList.toggle("hidden", on);
+  $("appBox").classList.toggle("hidden", !on);
+}
+
+function logout() { setToken(null); showApp(false); }
+
+function renderReports(reports) {
+  const box = $("reports");
+  box.textContent = "";
+  if (!reports.length) {
+    $("status").textContent = "No briefings yet. Tap Generate now.";
+    return;
+  }
+  $("status").textContent = "";
+  reports.forEach((r) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    const d = document.createElement("div");
+    d.className = "date";
+    d.textContent = r.report_date;
+    const body = document.createElement("div");
+    body.className = "report";
+    body.textContent = String(r.content).replace(/\*\*/g, "");
+    card.appendChild(d);
+    card.appendChild(body);
+    box.appendChild(card);
+  });
+}
+
+async function loadReports() {
+  $("status").textContent = "Loading...";
+  try {
+    const data = await api("/api/agent/reports");
+    renderReports(data.reports || []);
+  } catch (e) {
+    $("status").textContent = e.message;
+  }
+}
+
+$("loginBtn").addEventListener("click", async () => {
+  $("loginMsg").textContent = "";
+  $("loginBtn").disabled = true;
+  try {
+    const data = await api("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: $("email").value, password: $("password").value })
+    });
+    setToken(data.token);
+    $("password").value = "";
+    showApp(true);
+    loadReports();
+  } catch (e) {
+    $("loginMsg").textContent = e.message;
+  } finally {
+    $("loginBtn").disabled = false;
+  }
+});
+
+$("runBtn").addEventListener("click", async () => {
+  $("runBtn").disabled = true;
+  $("status").textContent = "Generating... this can take up to 30 seconds.";
+  try {
+    const data = await api("/api/agent/run", { method: "POST" });
+    if (data.message) { $("status").textContent = data.message; }
+    else { await loadReports(); }
+  } catch (e) {
+    $("status").textContent = e.message;
+  } finally {
+    $("runBtn").disabled = false;
+  }
+});
+
+$("logoutBtn").addEventListener("click", logout);
+
+if (getToken()) { showApp(true); loadReports(); }
+</script>
+</body>
+</html>
