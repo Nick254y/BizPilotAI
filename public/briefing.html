@@ -13,16 +13,19 @@
   body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); padding:16px; }
   .wrap { max-width:640px; margin:0 auto; }
   h1 { font-size:1.3rem; margin:8px 0 16px; }
+  h2 { font-size:1.05rem; margin:0 0 8px; }
   .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:12px; }
   input { width:100%; padding:12px; margin:6px 0 12px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:1rem; }
   button { padding:12px 16px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-size:1rem; cursor:pointer; }
   button.ghost { background:transparent; color:var(--accent); border:1px solid var(--border); }
+  button.link { background:none; color:var(--accent); padding:8px 0; text-decoration:underline; }
   button:disabled { opacity:.6; }
   .row { display:flex; gap:8px; margin-bottom:12px; }
   .date { color:var(--muted); font-size:.85rem; margin-bottom:8px; }
   .report { white-space:pre-wrap; line-height:1.5; }
   .msg { color:var(--muted); font-size:.9rem; margin:8px 0; }
   .err { color:#dc2626; }
+  .hint { color:var(--muted); font-size:.8rem; margin:-6px 0 12px; }
   .hidden { display:none; }
 </style>
 </head>
@@ -31,10 +34,24 @@
   <h1>BizPilot Daily Briefing</h1>
 
   <div id="loginBox" class="card">
+    <h2>Log in</h2>
     <label>Email<input id="email" type="email" autocomplete="username"></label>
     <label>Password<input id="password" type="password" autocomplete="current-password"></label>
     <button id="loginBtn">Log in</button>
     <div id="loginMsg" class="msg err"></div>
+    <button id="toSignup" class="link">New here? Create an account</button>
+  </div>
+
+  <div id="signupBox" class="card hidden">
+    <h2>Create account</h2>
+    <label>Name<input id="suName" type="text" autocomplete="name"></label>
+    <label>Email<input id="suEmail" type="email" autocomplete="username"></label>
+    <label>Password<input id="suPassword" type="password" autocomplete="new-password"></label>
+    <div class="hint">At least 8 characters.</div>
+    <label>Confirm password<input id="suConfirm" type="password" autocomplete="new-password"></label>
+    <button id="signupBtn">Create account</button>
+    <div id="signupMsg" class="msg err"></div>
+    <button id="toLogin" class="link">Already have an account? Log in</button>
   </div>
 
   <div id="appBox" class="hidden">
@@ -60,23 +77,24 @@ async function api(path, options) {
   if (token) headers.Authorization = "Bearer " + token;
   const res = await fetch(path, Object.assign({}, options, { headers }));
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401 && path !== "/api/auth/login") { logout(); }
+  if (res.status === 401 && !path.startsWith("/api/auth/")) { logout(); }
   if (!res.ok) throw new Error(data.message || "Request failed");
   return data;
 }
 
-function showApp(on) {
-  $("loginBox").classList.toggle("hidden", on);
-  $("appBox").classList.toggle("hidden", !on);
+function show(view) {
+  $("loginBox").classList.toggle("hidden", view !== "login");
+  $("signupBox").classList.toggle("hidden", view !== "signup");
+  $("appBox").classList.toggle("hidden", view !== "app");
 }
 
-function logout() { setToken(null); showApp(false); }
+function logout() { setToken(null); show("login"); }
 
 function renderReports(reports) {
   const box = $("reports");
   box.textContent = "";
   if (!reports.length) {
-    $("status").textContent = "No briefings yet. Tap Generate now.";
+    $("status").textContent = "No briefings yet. Create a project, then tap Generate now.";
     return;
   }
   $("status").textContent = "";
@@ -105,6 +123,11 @@ async function loadReports() {
   }
 }
 
+function enterApp(token) { setToken(token); show("app"); loadReports(); }
+
+$("toSignup").addEventListener("click", () => { $("loginMsg").textContent = ""; show("signup"); });
+$("toLogin").addEventListener("click", () => { $("signupMsg").textContent = ""; show("login"); });
+
 $("loginBtn").addEventListener("click", async () => {
   $("loginMsg").textContent = "";
   $("loginBtn").disabled = true;
@@ -113,14 +136,34 @@ $("loginBtn").addEventListener("click", async () => {
       method: "POST",
       body: JSON.stringify({ email: $("email").value, password: $("password").value })
     });
-    setToken(data.token);
     $("password").value = "";
-    showApp(true);
-    loadReports();
+    enterApp(data.token);
   } catch (e) {
     $("loginMsg").textContent = e.message;
   } finally {
     $("loginBtn").disabled = false;
+  }
+});
+
+$("signupBtn").addEventListener("click", async () => {
+  $("signupMsg").textContent = "";
+  if ($("suPassword").value !== $("suConfirm").value) {
+    $("signupMsg").textContent = "Passwords do not match.";
+    return;
+  }
+  $("signupBtn").disabled = true;
+  try {
+    const data = await api("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ name: $("suName").value, email: $("suEmail").value, password: $("suPassword").value })
+    });
+    $("suPassword").value = "";
+    $("suConfirm").value = "";
+    enterApp(data.token);
+  } catch (e) {
+    $("signupMsg").textContent = e.message;
+  } finally {
+    $("signupBtn").disabled = false;
   }
 });
 
@@ -140,7 +183,7 @@ $("runBtn").addEventListener("click", async () => {
 
 $("logoutBtn").addEventListener("click", logout);
 
-if (getToken()) { showApp(true); loadReports(); }
+if (getToken()) { show("app"); loadReports(); } else { show("login"); }
 </script>
 </body>
 </html>
